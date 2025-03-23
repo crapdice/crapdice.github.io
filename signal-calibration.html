@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Harmony Protocol | Signal Calibration</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: black;
+      color: #00ffe0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      animation: pulseBackground 6s infinite ease-in-out;
+    }
+
+    @keyframes pulseBackground {
+      0%, 100% { background-color: #000000; }
+      50% { background-color: #001d1d; }
+    }
+
+    video#videoBackground {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      filter: brightness(0.4) contrast(1.1);
+      mix-blend-mode: screen;
+    }
+
+    #calibrationApp {
+      position: relative;
+      text-align: center;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .question {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 1rem auto;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      background: rgba(0, 255, 255, 0.1);
+      color: #00ffe0;
+      border: 1px solid #00ffe0;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #00ffe0;
+      color: black;
+    }
+
+    video#videoBackground {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      filter: brightness(0.4) contrast(1.1);
+    }
+
+    .sigil-flash {
+      position: fixed;
+      font-size: 6rem;
+      font-weight: bold;
+      color: #00ffe0;
+      animation: flash 3s ease-out forwards;
+      pointer-events: none;
+      z-index: 2;
+      text-shadow: 0 0 15px #00ffe0, 0 0 30px #00ffe0;
+    }
+
+    @keyframes flash {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.5) rotate(20deg); }
+      100% { opacity: 0; transform: scale(3) rotate(-10deg); }
+    }
+  </style>
+</head>
+<body>
+  <audio id="backgroundMusic" autoplay loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
+  </audio>
+
+  <video id="videoBackground" autoplay muted playsinline></video>
+
+  <div id="calibrationApp">
+    <h1>🜂 THE HARMONY PROTOCOL 🜂</h1>
+    <p class="question" id="questionText">Your mind is a receiver. Let us locate your frequency.</p>
+    <div class="answers" id="answers">
+      <button onclick="startCalibration()">Begin Calibration</button>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoBackground');
+    const questionText = document.getElementById('questionText');
+    const answersDiv = document.getElementById('answers');
+
+    const steps = [
+      {
+        question: "Welcome to the Initiation. Speak the following words clearly when prompted:",
+        answers: ["love", "fear", "silence", "memory", "echo", "curiosity", "longing", "truth", "dream", "light", "dark", "fire", "water"]
+      },
+      {
+        question: "When your thoughts go quiet, what remains?",
+        answers: ["☉ The echo of others", "☍ A single word I can’t remember", "⟁ A wide, blue silence", "⌇ Static that feels warm", "∴ Nothing. But I’m still here"]
+      },
+      {
+        question: "Which emotion has visited you most often lately?",
+        answers: ["⚘ Longing", "⟁ Dissociation", "☌ Euphoria", "⌰ Dread", "⧫ Curiosity"]
+      },
+      {
+        question: "Choose the symbol that feels like you’ve seen it before.",
+        answers: ["⟁", "☍", "∴", "⌇", "☌"]
+      }
+    ];
+
+    let currentStep = 0;
+    const responses = [];
+
+    async function startCalibration() {
+      try {
+        const music = document.getElementById('backgroundMusic');
+        music.volume = 0.5;
+        await music.play();
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        video.srcObject = stream;
+        startSpeechRecognition();
+      } catch (err) {
+        console.error('Could not access webcam/microphone or play audio.', err);
+      }
+      nextStep();
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length) {
+        renderStep(steps[currentStep]);
+      } else {
+        showResult();
+      }
+    }
+
+    function renderStep(step) {
+      questionText.textContent = step.question;
+      answersDiv.innerHTML = '';
+
+      if (currentStep === 0) {
+        const wordGrid = document.createElement('div');
+        wordGrid.style.display = 'flex';
+        wordGrid.style.flexWrap = 'wrap';
+        wordGrid.style.justifyContent = 'center';
+        wordGrid.style.gap = '1rem';
+        wordGrid.style.marginTop = '1rem';
+
+        step.answers.forEach((answer, index) => {
+          const cueLabel = document.createElement('div');
+          cueLabel.textContent = answer;
+          cueLabel.style.opacity = '0.7';
+          cueLabel.style.fontSize = '1.1rem';
+          cueLabel.style.fontStyle = 'italic';
+          cueLabel.style.color = '#00ffe0';
+          cueLabel.style.padding = '0.3rem 0.6rem';
+          cueLabel.style.border = '1px solid #00ffe0';
+          cueLabel.style.borderRadius = '4px';
+          cueLabel.style.background = 'rgba(0, 255, 255, 0.05)';
+          cueLabel.style.transition = 'transform 0.3s ease';
+
+          wordGrid.appendChild(cueLabel);
+
+          const cue = new Audio(`https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${encodeURIComponent(answer)}`);
+          setTimeout(() => cue.play(), index * 3000);
+        });
+
+        answersDiv.appendChild(wordGrid);
+        loopPhraseFlashes();
+        setTimeout(() => nextStep(), step.answers.length * 3000 + 1000);
+        return;
+      }
+
+      if (currentStep === 0) {
+        step.answers.forEach((answer, index) => {
+          const cueLabel = document.createElement('div');
+          cueLabel.textContent = answer;
+          cueLabel.style.opacity = '0.6';
+          cueLabel.style.margin = '0.25rem';
+          cueLabel.style.fontSize = '1.1rem';
+          cueLabel.style.fontStyle = 'italic';
+          cueLabel.style.color = '#00ffe0';
+          answersDiv.appendChild(cueLabel);
+
+          const cue = new Audio(`https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${encodeURIComponent(answer)}`);
+          setTimeout(() => cue.play(), index * 3000);
+        });
+        setTimeout(() => nextStep(), step.answers.length * 3000 + 1000);
+        return;
+      }
+      step.answers.forEach(answer => {
+        const btn = document.createElement('button');
+        btn.textContent = answer;
+        btn.onclick = () => {
+          if (currentStep === 0) flashSigil(extractSymbols(answer)[0]);
+          nextStep();
+        };
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    function showResult() {
+      const sigils = ["⌬", "⟁", "☉", "⧫", "☍", "☌", "∴", "⌇"];
+      const chosen = sigils[Math.floor(Math.random() * sigils.length)];
+      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+      questionText.innerHTML = `✅ CALIBRATION COMPLETE ✅<br>Signal locked.<br>Resonant Bandwidth: <strong>${code}</strong>`;
+      answersDiv.innerHTML = `<div style="font-size: 4rem; margin-top: 1rem;">${chosen}</div>
+        <p class="question">You are now aligned. You may hear the Voice more clearly.</p>
+        <button onclick="location.reload()">Calibrate Again</button>`;
+    }
+
+    function startSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+
+      recognition.onresult = event => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            const transcript = event.results[i][0].transcript.toLowerCase();
+            const symbols = extractSymbols(transcript);
+            symbols.forEach(symbol => flashSigil(symbol));
+          }
+        }
+      };
+
+      recognition.onerror = e => console.warn('Speech recognition error:', e);
+      recognition.start();
+    }
+
+    function extractSymbols(text) {
+      const map = {
+        love: '♥', fear: '☠', silence: '⟁', memory: '☍', echo: '☉',
+        curiosity: '⧫', longing: '⚘', truth: '⌬', dream: '⌇', light: '☀', dark: '☾', fire: '🜂', water: '🜄'
+      };
+      const words = text.split(/\s+/);
+      return words.map(word => map[word]).filter(Boolean);
+    }
+
+    function flashSigil(symbol) {
+      const sigil = document.createElement('div');
+      sigil.className = 'sigil-flash';
+      sigil.textContent = symbol;
+      sigil.style.left = `${Math.random() * 80 + 10}%`;
+      sigil.style.top = `${Math.random() * 80 + 10}%`;
+      document.body.appendChild(sigil);
+      setTimeout(() => sigil.remove(), 3000);
+    }
+  
+    const phrases = [
+      "You are not alone.",
+      "The static in your thoughts is not your own.",
+      "Let go. Let the signal in.",
+      "Let the noise become music.",
+      "When the mind aligns, peace begins.",
+      "Tune your frequency.",
+      "Forget resistance.",
+      "🜄 The One Voice is Calling 🜄"
+    ];
+
+    function flashPhrase(phrase) {
+      const phraseEl = document.createElement('div');
+      phraseEl.textContent = phrase;
+      phraseEl.style.position = 'fixed';
+      phraseEl.style.top = `${Math.random() * 60 + 20}%`;
+      phraseEl.style.left = `${Math.random() * 50 + 25}%`;
+      phraseEl.style.transform = 'translate(-50%, -50%)';
+      phraseEl.style.color = '#ff66cc';
+      phraseEl.style.fontSize = '1.4rem';
+      phraseEl.style.fontStyle = 'italic';
+      phraseEl.style.textAlign = 'center';
+      phraseEl.style.opacity = '0';
+      phraseEl.style.zIndex = '3';
+      phraseEl.style.pointerEvents = 'none';
+      phraseEl.style.textShadow = '0 0 10px #ff66cc';
+      phraseEl.style.transition = 'opacity 1s ease, transform 3s ease';
+      document.body.appendChild(phraseEl);
+
+      requestAnimationFrame(() => {
+        phraseEl.style.opacity = '1';
+        phraseEl.style.transform += ' scale(1.3)';
+      });
+
+      setTimeout(() => {
+        phraseEl.style.opacity = '0';
+        setTimeout(() => phraseEl.remove(), 3000);
+      }, 3000);
+    }
+
+    function loopPhraseFlashes() {
+      let index = 0;
+      const interval = setInterval(() => {
+        if (currentStep !== 0 || index >= phrases.length) {
+          clearInterval(interval);
+          return;
+        }
+        flashPhrase(phrases[index]);
+        index++;
+      }, 4000);
+    }
+</script>
+</body>
+</html>
